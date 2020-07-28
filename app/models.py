@@ -37,10 +37,18 @@ class Product(models.Model):
     product_type = models.CharField(max_length=30,choices=PRODUCT_TYPE_CHOICES, default='almacenable')
     price = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
     cost = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
-    stock = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    stock = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
 
     def __str__(self):
         return self.name
+    
+    def terminado_o_insumo(self):
+        if self.could_be_sold and self.is_manufactured:
+            return 'Terminado'
+        elif self.could_be_bought:
+            return 'Insumo'
+        else:
+            return self.product_type
  
 class MaterialList(models.Model):
      product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to={'is_manufactured': True})
@@ -96,7 +104,7 @@ class Purchase(models.Model):
 class PurchaseDetail(models.Model):
     purchase = models.ForeignKey('Purchase', on_delete=models.PROTECT, related_name='purchase_details')
     product = models.ForeignKey('Product', on_delete=models.PROTECT, limit_choices_to={'could_be_bought': True})
-    quantity = models.PositiveSmallIntegerField()
+    quantity = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
     unit_price = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
     discount = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
@@ -114,7 +122,7 @@ class Inventory(models.Model):
     document = models.CharField(max_length=20, blank=True, null=True)
     reason = models.CharField(max_length=250, blank=True, null=True)
     product = models.ForeignKey('Product', on_delete=models.PROTECT)
-    quantity = models.PositiveSmallIntegerField()
+    quantity = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
 
     def save(self, *args, **kwargs):
         product = Product.objects.get(pk=self.product.id)
