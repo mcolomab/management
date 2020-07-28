@@ -1,8 +1,74 @@
 from decimal import Decimal
 
-from django.contrib import admin
-from .models import Partner, Product, MaterialList, Component, Document, Purchase, PurchaseDetail, Inventory
+from django.contrib import admin, messages
+from .models import Partner, Product, MaterialList, Component, Document, Purchase, PurchaseDetail, Inventory, ProductionOrder
 
+
+admin.site.register(PurchaseDetail)
+
+@admin.register(ProductionOrder)
+class ProductionOrderAdmin(admin.ModelAdmin):
+    readonly_fields = ('document_number',)
+    list_display = (
+        'document_number',
+        'date',
+        'material_list', 
+        'quantity_to_produce',
+        'status',
+    )
+
+    def response_add(self, request, new_object):
+        doc = new_object.document_type
+        new_object.document_number = doc.serial + '-' + str(doc.current_number)
+        doc.current_number += 1
+        doc.save()
+        obj = self.after_saving_model_and_related_inlines(request, new_object)
+        return super(ProductionOrderAdmin, self).response_add(request, obj)
+
+    def response_change(self, request, obj):
+        obj = self.after_saving_model_and_related_inlines(request, obj)
+        return super(ProductionOrderAdmin, self).response_change(request, obj)
+
+    def after_saving_model_and_related_inlines(self, request, obj):
+        if obj.status == 'confirmada':
+            """ Calcular el factor a usar en cada consumo de insumos
+                Esto se consigue dividiendo la cantidad de productos a producir con
+                la cantidad de productos de la lista de materiales (receta) """
+            factor = obj.quantity_to_produce/obj.material_list.quantity_of_products 
+            there_is_stock = self.stock_available(obj, factor)
+            if there_is_stock:
+                self.produce(obj, factor)
+                obj.status = 'producida'
+            else:
+                obj.status = 'borrador'
+                self.message_user(request, 'La producción no fue realizada pues no se cuenta con insumos suficientes', messages.WARNING)
+        obj.save()
+        return obj
+
+    def stock_available(self, obj, factor):
+        res = True
+        for item in obj.material_list.components.all():
+            if not item.product.stock >= factor*item.quantity:
+                res = False
+                break
+        return res
+
+    def produce(self, obj, factor):
+        """ Consumir los insumos de la lista de materiales. """
+        for item in obj.material_list.components.all():
+            Inventory.objects.create(
+                movement_type='disminucion',
+                product=item.product,
+                quantity=factor*item.quantity,
+                document=obj.document_type.abbreviation+obj.document_number
+            )
+        """ Cargar lo producido al inventario. """
+        Inventory.objects.create(
+            movement_type='produccion',
+            product=item.material_list.product,
+            quantity=obj.quantity_to_produce,
+            document=obj.document_type.abbreviation+obj.document_number
+        )
 
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
@@ -18,7 +84,7 @@ class InventoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    readonly_fields = ('stock',)
+    #readonly_fields = ('stock',)
     list_display = ('name', 'stock', 'terminado_o_insumo')
 
 class ComponentInline(admin.TabularInline):
@@ -49,6 +115,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         'amount_paid',
         'status',
     )
+    
     def response_add(self, request, new_object):
         doc = new_object.document_type
         new_object.document_number = doc.serial + '-' + str(doc.current_number)

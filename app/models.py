@@ -51,19 +51,33 @@ class Product(models.Model):
             return self.product_type
  
 class MaterialList(models.Model):
-     product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to={'is_manufactured': True})
-     quantity_of_products = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=100)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to={'is_manufactured': True})
+    quantity_of_products = models.PositiveSmallIntegerField()
 
-     def __str__(self):
-        return self.product.name
+    def __str__(self):
+        return self.name
      
 class Component(models.Model):
-    material_list = models.ForeignKey('MaterialList', on_delete=models.CASCADE)
-    product = models.ForeignKey('Product', on_delete=models.CASCADE)
-    quantity = models.PositiveSmallIntegerField()
+    material_list = models.ForeignKey('MaterialList', on_delete=models.CASCADE, related_name='components')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to={'could_be_bought': True})
+    quantity = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+
+class ProductionOrder(models.Model):
+    STATUS_CHOICES = (
+        ('borrador', 'Borrador'),
+        ('confirmada', 'Confirmada'),
+        ('producida', 'Producida'),
+    )
+    document_type = models.ForeignKey('Document', on_delete=models.PROTECT, limit_choices_to={'abbreviation': 'OP'})
+    document_number = models.CharField(max_length=15)
+    date = models.DateTimeField()
+    material_list = models.ForeignKey('MaterialList', on_delete=models.PROTECT)
+    quantity_to_produce = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='borrador')
 
 class Document(models.Model):
-    name = models.CharField(max_length=8)
+    name = models.CharField(max_length=50)
     abbreviation = models.CharField(max_length=3)
     serial = models.CharField(max_length=3)
     current_number = models.PositiveSmallIntegerField()
@@ -89,7 +103,8 @@ class Purchase(models.Model):
     document_number = models.CharField(max_length=15)
     document_type = models.ForeignKey('Document', on_delete=models.PROTECT)
     provider = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'partner_type': 'provider'})
-    date = models.DateField()
+    purchase_date = models.DateField()
+    expiration_date = models.DateField()
     currency = models.CharField(max_length=7, choices=CURRENCY_CHOICES, default='pen')
     sub_total = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
     igv = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
