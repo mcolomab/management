@@ -1,10 +1,11 @@
 from decimal import Decimal
 
 from django.contrib import admin, messages
-from .models import Partner, Product, MaterialList, Component, Document, Purchase, PurchaseDetail, Inventory, ProductionOrder
+from .models import Partner, Product, MaterialList, Component, Document, Purchase, PurchaseDetail, Inventory, ProductionOrder, Sale, SaleDetail
 
 
 admin.site.register(PurchaseDetail)
+admin.site.register(SaleDetail)
 
 @admin.register(ProductionOrder)
 class ProductionOrderAdmin(admin.ModelAdmin):
@@ -84,7 +85,7 @@ class InventoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    #readonly_fields = ('stock',)
+    readonly_fields = ('stock',)
     list_display = ('name', 'stock', 'terminado_o_insumo')
 
 class ComponentInline(admin.TabularInline):
@@ -102,7 +103,6 @@ class PurchaseDetailInline(admin.TabularInline):
 class PurchaseAdmin(admin.ModelAdmin):
     inlines = [PurchaseDetailInline,]
     readonly_fields = (
-        'document_number',
         'sub_total',
         'igv',
         'total',
@@ -117,10 +117,6 @@ class PurchaseAdmin(admin.ModelAdmin):
     )
     
     def response_add(self, request, new_object):
-        doc = new_object.document_type
-        new_object.document_number = doc.serial + '-' + str(doc.current_number)
-        doc.current_number += 1
-        doc.save()
         obj = self.after_saving_model_and_related_inlines(new_object)
         return super(PurchaseAdmin, self).response_add(request, obj)
 
@@ -163,3 +159,71 @@ class PurchaseAdmin(admin.ModelAdmin):
         obj.save()
         return obj
 
+class SaleDetailInline(admin.TabularInline):
+    model = SaleDetail
+    extra = 1
+
+@admin.register(Sale)
+class SaleAdmin(admin.ModelAdmin):
+    inlines = [SaleDetailInline,]
+    readonly_fields = (
+        'document_number',
+        'sub_total',
+        'igv',
+        'total',
+    )
+    list_display = (
+        'document_number',
+        'document_type',
+        'customer',
+        'total',
+        'amount_paid',
+        'status',
+    )
+    
+    def response_add(self, request, new_object):
+        doc = new_object.document_type
+        new_object.document_number = doc.serial + '-' + str(doc.current_number)
+        doc.current_number += 1
+        doc.save()
+        obj = self.after_saving_model_and_related_inlines(new_object)
+        return super(SaleAdmin, self).response_add(request, obj)
+
+    def response_change(self, request, obj):
+        obj = self.after_saving_model_and_related_inlines(obj)
+        return super(SaleAdmin, self).response_change(request, obj)
+
+    def after_saving_model_and_related_inlines(self, obj):
+        sub_total, igv, despachada = Decimal(0), Decimal(0), False
+        for item in obj.sale_details.all():
+            if obj.document_type.abbreviation.lower() == 'fac':
+                sub_total += item.quantity * item.unit_price * Decimal(1 - (item.discount/100))
+                igv += item.quantity * item.unit_price * Decimal(0.18)
+            elif obj.document_type.abbreviation.lower() == 'bol':
+                sub_total += item.quantity * item.unit_price * Decimal(0.18) * Decimal(1 - (item.discount/100))
+                igv = Decimal(0)
+            else:
+                sub_total += item.quantity * item.unit_price * Decimal(1 - (item.discount/100))
+                igv = Decimal(0)
+
+            obj.sub_total = sub_total
+            obj.igv = igv
+            obj.total = sub_total + igv
+
+            if obj.status == 'confirmada':
+                Inventory.objects.create(
+                    movement_type='venta',
+                    product=item.product,
+                    quantity=item.quantity,
+                    document=obj.document_type.abbreviation+obj.document_number
+                )
+                despachada = True
+
+        if despachada:
+            obj.status = 'despachada'
+
+        TWOPLACES = Decimal(10) ** -2
+        if obj.amount_paid == Decimal(obj.total).quantize(TWOPLACES):
+            obj.status = 'pagada'
+        obj.save()
+        return obj

@@ -9,12 +9,12 @@ class Partner(models.Model):
         ('ce', 'Cedula Extranjera'),
     )
     PARTNER_TYPE_CHOICES = (
-        ('client', 'Cliente'),
+        ('customer', 'Cliente'),
         ('provider', 'Proveedor'),
         ('cp', 'Cliente y Proveedor'),
     )
     name = models.CharField(max_length=250)
-    partner_type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default='client')
+    partner_type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default='customer')
     document_type = models.CharField(max_length=20,choices=DOCUMENT_TYPE_CHOICES, default='ruc')
     document_number = models.CharField(max_length=20, unique=True)
     address = models.CharField(max_length=200)
@@ -100,8 +100,8 @@ class Purchase(models.Model):
         ('pen', 'Soles'),
         ('usd', 'Dólares'),
     )
-    document_number = models.CharField(max_length=15)
     document_type = models.ForeignKey('Document', on_delete=models.PROTECT)
+    document_number = models.CharField(max_length=15)
     provider = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'partner_type': 'provider'})
     purchase_date = models.DateField()
     expiration_date = models.DateField()
@@ -119,6 +119,43 @@ class Purchase(models.Model):
 class PurchaseDetail(models.Model):
     purchase = models.ForeignKey('Purchase', on_delete=models.PROTECT, related_name='purchase_details')
     product = models.ForeignKey('Product', on_delete=models.PROTECT, limit_choices_to={'could_be_bought': True})
+    quantity = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
+    unit_price = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
+    discount = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+class Sale(models.Model):
+    PAID_WITH_CHOICES = (
+        ('banco', 'Banco'),
+        ('efectivo', 'Efectivo'),
+    )
+    STATUS_CHOICES = (
+        ('borrador', 'Borrador'),
+        ('confirmada', 'Confirmada'),
+        ('despachada', 'Despachada'),
+        ('pagada', 'Pagada'),
+    )
+    CURRENCY_CHOICES = (
+        ('pen', 'Soles'),
+    )
+    document_number = models.CharField(max_length=15)
+    document_type = models.ForeignKey('Document', on_delete=models.PROTECT)
+    customer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'partner_type': 'customer'})
+    sale_date = models.DateField()
+    expiration_date = models.DateField()
+    currency = models.CharField(max_length=7, choices=CURRENCY_CHOICES, default='pen')
+    sub_total = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    igv = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    amount_paid = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    paid_with = models.CharField(max_length=10, choices=PAID_WITH_CHOICES, default='efectivo')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='borrador')
+
+    def __str__(self):
+        return self.document_type.abbreviation + self.document_number
+
+class SaleDetail(models.Model):
+    sale = models.ForeignKey('Sale', on_delete=models.PROTECT, related_name='sale_details')
+    product = models.ForeignKey('Product', on_delete=models.PROTECT, limit_choices_to={'could_be_sold': True})
     quantity = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
     unit_price = models.DecimalField(max_digits=7, decimal_places=2, default=1.00)
     discount = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
