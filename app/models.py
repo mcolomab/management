@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -45,6 +46,8 @@ class Product(models.Model):
     def terminado_o_insumo(self):
         if self.could_be_sold and self.is_manufactured:
             return 'Terminado'
+        elif self.is_manufactured:
+            return 'Preparado'
         elif self.could_be_bought:
             return 'Insumo'
         else:
@@ -60,7 +63,7 @@ class MaterialList(models.Model):
      
 class Component(models.Model):
     material_list = models.ForeignKey('MaterialList', on_delete=models.CASCADE, related_name='components')
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to={'could_be_bought': True})
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, limit_choices_to=Q(could_be_bought=True) | Q(is_manufactured=True))
     quantity = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
 
 class ProductionOrder(models.Model):
@@ -137,11 +140,19 @@ class Sale(models.Model):
     CURRENCY_CHOICES = (
         ('pen', 'Soles'),
     )
+    VENDOR_CHOICES = (
+        ('oficina', 'Oficina'),
+        ('lady', 'Lady'),
+        ('sugey', 'Sugey'),
+        ('aracelli', 'Aracelli'),
+        ('jasmina', 'Jasmina'),
+    )
     document_number = models.CharField(max_length=15)
     document_type = models.ForeignKey('Document', on_delete=models.PROTECT)
     customer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'partner_type': 'customer'})
     sale_date = models.DateField()
     expiration_date = models.DateField()
+    vendor = models.CharField(max_length=10, choices=VENDOR_CHOICES, default='oficina')
     currency = models.CharField(max_length=7, choices=CURRENCY_CHOICES, default='pen')
     sub_total = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
     igv = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
