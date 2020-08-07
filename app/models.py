@@ -3,6 +3,10 @@ from django.db.models import Q
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+class ClientesManager(models.Manager):
+    def get_queryset(self):
+        return super(ClientesManager, self).get_queryset().filter(Q(partner_type='customer') | Q(partner_type='cp'))
+
 class Partner(models.Model):
     DOCUMENT_TYPE_CHOICES = (
         ('ruc', 'RUC'),
@@ -22,8 +26,15 @@ class Partner(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
 
+    objects = models.Manager()
+    clientes = ClientesManager()
+
     def __str__(self):
         return self.name
+
+class ProductosManager(models.Manager):
+    def get_queryset(self):
+        return super(ProductosManager, self).get_queryset().filter(could_be_sold=True)
 
 class Product(models.Model):
     PRODUCT_TYPE_CHOICES = (
@@ -39,6 +50,9 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
     cost = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
     stock = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+
+    objects = models.Manager()
+    productos = ProductosManager()
 
     def __str__(self):
         return self.name
