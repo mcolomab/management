@@ -222,8 +222,10 @@ class SaleAdmin(admin.ModelAdmin):
         if despachada:
             obj.status = 'despachada'
 
+        anulada = True if obj.status == 'anulada' else False
+
         TWOPLACES = Decimal(10) ** -2
-        if obj.amount_paid == Decimal(obj.total).quantize(TWOPLACES):
+        if not anulada and (obj.amount_paid == Decimal(obj.total).quantize(TWOPLACES)):
             obj.status = 'pagada'
         obj.save()
         return obj

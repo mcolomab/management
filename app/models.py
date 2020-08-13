@@ -54,6 +54,9 @@ class Product(models.Model):
     objects = models.Manager()
     productos = ProductosManager()
 
+    class Meta:
+        ordering = ['-stock']
+
     def __str__(self):
         return self.name
     
@@ -150,6 +153,7 @@ class Sale(models.Model):
         ('confirmada', 'Confirmada'),
         ('despachada', 'Despachada'),
         ('pagada', 'Pagada'),
+        ('anulada', 'Anulada'),
     )
     CURRENCY_CHOICES = (
         ('pen', 'Soles'),
