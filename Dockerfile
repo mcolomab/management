@@ -1,8 +1,16 @@
-FROM python:3
-ENV PYTHONUNBUFFERED 1
-RUN mkdir /code
-WORKDIR /code
-COPY requirements.txt /code/
-RUN pip install -r requirements.txt
-COPY . /code/
+# pull official base image
+FROM python:3.7
 
+# set work directory
+WORKDIR /code
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install dependencies
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt
+
+# copy project
+COPY . .
