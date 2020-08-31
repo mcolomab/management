@@ -194,6 +194,10 @@ class SaleAdmin(admin.ModelAdmin):
         return super(SaleAdmin, self).response_change(request, obj)
 
     def after_saving_model_and_related_inlines(self, obj):
+        if obj.status == 'anulada':
+            for item in Inventory.objects.filter(document__icontains=obj.document_number):
+                item.delete()
+        
         sub_total, igv, despachada = Decimal(0), Decimal(0), False
         for item in obj.sale_details.all():
             if obj.document_type.abbreviation.lower() == 'fac':

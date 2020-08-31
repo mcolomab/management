@@ -214,3 +214,13 @@ class Inventory(models.Model):
         product.save()
         super(Inventory, self).save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        product = Product.objects.get(pk=self.product.id)
+        if self.movement_type == 'compra' or self.movement_type == 'produccion' or self.movement_type == 'devolucion' or self.movement_type == 'ingreso_interno':
+            product.stock -= self.quantity
+        else: 
+            product.stock += self.quantity
+        product.save()
+
+        super(Inventory, self).delete(*args, **kwargs)
+
