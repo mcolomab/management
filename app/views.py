@@ -7,7 +7,7 @@ from .models import Product, Sale, Document, SaleDetail, Partner
 
 class ProductList(ListView):
     #model = Product
-    queryset = Product.productos.all()
+    queryset = Product.objects.all()
     context_object_name = 'products'
     paginate_by = 20
 
