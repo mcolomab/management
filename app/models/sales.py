@@ -47,7 +47,7 @@ class Sale(models.Model):
         return self.document_type.abbreviation + self.document_number
     
     def save(self, *args, **kwargs):
-        if self.status == 'anulada':
+        if self.id and self.status == 'anulada':
             for item in Inventory.objects.filter(document__icontains=self.document_number):
                 item.delete()
         
@@ -65,8 +65,7 @@ class Sale(models.Model):
                     quantity=item.quantity,
                     document=self.document_type.abbreviation+self.document_number
                 )
-            if SaleDetail.objects.filter(sale=self.id):
-                self.status = 'despachada'
+            self.status = 'despachada'
 
         anulada = True if self.status == 'anulada' else False
         
@@ -94,8 +93,27 @@ class SaleDetail(models.Model):
             sub_total = self.quantity * self.unit_price * 1 - self.discount/100
             igv = 0
 
-        sale.sub_total = sub_total
-        sale.igv = igv
-        sale.total = sub_total + igv
+        sale.sub_total += sub_total
+        sale.igv += igv
+        sale.total += sub_total + igv
         sale.save()
         super(SaleDetail, self).save(*args, **kwargs)
+
+    def delete(self):
+        sale = Sale.objects.get(pk=self.sale.id)
+        if sale.document_type.abbreviation.lower() == 'fac':
+            sub_total = self.quantity * self.unit_price * 1 - self.discount/100
+            igv = self.quantity * self.unit_price * 0.18
+        elif sale.document_type.abbreviation.lower() == 'bol':
+            sub_total = self.quantity * self.unit_price * 0.18 * 1 - self.discount/100
+            igv = 0
+        else:
+            sub_total = self.quantity * self.unit_price * 1 - self.discount/100
+            igv = 0
+
+        sale.sub_total -= sub_total
+        sale.igv -= igv
+        sale.total -= sub_total + igv
+        sale.save()
+
+        super(SaleDetail, self).delete()

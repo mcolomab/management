@@ -22,6 +22,9 @@ class Inventory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.FloatField(default=1)
 
+    class Meta:
+        ordering = ['-date']
+
     def save(self, *args, **kwargs):
         product = Product.objects.get(pk=self.product.id)
         if self.movement_type == 'compra' or self.movement_type == 'produccion' or self.movement_type == 'devolucion' or self.movement_type == 'ingreso_interno':
