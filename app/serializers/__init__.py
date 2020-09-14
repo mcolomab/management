@@ -1,4 +1,3 @@
-# __init__.py
 from .documents import DocumentSerializer
 from .inventories import InventorySerializer
 from .partners import PartnerSerializer

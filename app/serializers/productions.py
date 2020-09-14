@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ProductionOrder
+from models import ProductionOrder
 
 
 class ProductionOrderSerializer(serializers.ModelSerializer):

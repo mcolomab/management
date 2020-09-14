@@ -1,4 +1,3 @@
-# __init__.py
 from .documents import Document
 from .inventories import Inventory
 from .partners import Partner

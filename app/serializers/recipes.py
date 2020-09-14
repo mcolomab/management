@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import MaterialList
+from models import MaterialList
 
 
 class MaterialListSerializer(serializers.ModelSerializer):

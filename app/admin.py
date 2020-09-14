@@ -81,6 +81,7 @@ class SaleAdmin(admin.ModelAdmin):
         'sub_total',
         'igv',
         'total',
+        'status',
     )
     list_display = (
         'document_number',
@@ -90,3 +91,14 @@ class SaleAdmin(admin.ModelAdmin):
         'amount_paid',
         'status',
     )
+    actions = ['cancel_sales', 'do_shipping']
+
+    def cancel_sales(self, request, queryset):
+        for q in queryset:
+            q.anular()
+    cancel_sales.short_description = "Anular ventas seleccionadas"
+
+    def do_shipping(self, request, queryset):
+        for q in queryset:
+            q.despachar()
+    do_shipping.short_description = "Despachar ventas seleccionadas"

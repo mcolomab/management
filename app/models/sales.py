@@ -45,27 +45,30 @@ class Sale(models.Model):
 
     def __str__(self):
         return self.document_type.abbreviation + self.document_number
+
+    def anular(self):
+        for item in Inventory.objects.filter(document=self.document_type.abbreviation+self.document_number):
+            item.delete()
+        self.status = 'anulada'
+        self.save(update_fields=['status'])
+
+    def despachar(self):
+        for item in SaleDetail.objects.filter(sale=self.id):
+            Inventory.objects.create(
+                movement_type='venta',
+                product=item.product,
+                quantity=item.quantity,
+                document=self.document_type.abbreviation+self.document_number
+            )
+        self.status = 'despachada'
+        self.save(update_fields=['status'])
     
     def save(self, *args, **kwargs):
-        if self.id and self.status == 'anulada':
-            for item in Inventory.objects.filter(document__icontains=self.document_number):
-                item.delete()
-        
         if not self.id:
             doc = Document.objects.get(id=self.document_type.id)
             self.document_number = doc.serial + '-' + str(doc.current_number)
             doc.current_number += 1
             doc.save()
-
-        if self.status == 'confirmada':
-            for item in SaleDetail.objects.filter(sale=self.id):
-                Inventory.objects.create(
-                    movement_type='venta',
-                    product=item.product,
-                    quantity=item.quantity,
-                    document=self.document_type.abbreviation+self.document_number
-                )
-            self.status = 'despachada'
 
         anulada = True if self.status == 'anulada' else False
         

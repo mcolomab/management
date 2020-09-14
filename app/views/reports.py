@@ -1,15 +1,9 @@
 import csv
 
 from django.http import HttpResponse
-from django.views.generic import ListView
-from .models import Product, Sale, Document, SaleDetail, Partner
 
+from app.models import Document, Partner, Sale, SaleDetail
 
-class ProductList(ListView):
-    #model = Product
-    queryset = Product.objects.all()
-    context_object_name = 'products'
-    paginate_by = 20
 
 def update_lists(plist, qlist, product, quantity):
     if product not in plist:
