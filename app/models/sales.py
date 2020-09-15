@@ -96,6 +96,8 @@ class SaleDetail(models.Model):
             sub_total = self.quantity * self.unit_price * 1 - self.discount/100
             igv = 0
 
+        sub_total = round(sub_total, 2)
+        igv = round(igv, 2)
         sale.sub_total += sub_total
         sale.igv += igv
         sale.total += sub_total + igv
@@ -114,6 +116,8 @@ class SaleDetail(models.Model):
             sub_total = self.quantity * self.unit_price * 1 - self.discount/100
             igv = 0
 
+        sub_total = round(sub_total, 2)
+        igv = round(igv, 2)
         sale.sub_total -= sub_total
         sale.igv -= igv
         sale.total -= sub_total + igv
