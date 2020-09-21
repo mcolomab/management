@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
+    'littlebox.apps.LittleboxConfig'
 ]
 
 # django-crispy-forms
