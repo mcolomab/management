@@ -5,6 +5,8 @@ from .views import (ProductList, sales_factura_report,
                     total_sales_product_report, total_sales_report, print_invoice,
                     viewsale)
 
+from .views import CustomerList, CustomerDetail
+
 app_name = 'app'
 
 urlpatterns = [
@@ -15,5 +17,7 @@ urlpatterns = [
     path('reports/sales/vendor/<str:vendor>/', sales_vendor_report, name='sales_vendor'),
     path('products/', ProductList.as_view(), name='product_list'),
     path('pdfs/sale/<int:sale_id>/', print_invoice, name='pdf_test'),
-    path('sale/', viewsale, name='view_sale')
+    path('sale/', viewsale, name='view_sale'),
+    path('api/customers/', CustomerList.as_view(), name='customer-list'),
+    path('api/customers/<int:pk>/', CustomerDetail.as_view(), name='customer-detail'),
 ]

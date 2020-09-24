@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from models import Sale, SaleDetail
+from app.models import Sale, SaleDetail
 
 
 class SaleDetailSerializer(serializers.ModelSerializer):
