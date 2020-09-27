@@ -1,0 +1,27 @@
+.sidenav {
+  grid-area: sidenav;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #313a46;
+}
+
+.sidenav img {
+  margin: 5px;
+  height: 70px;
+  border-radius: 50%;
+}
+
+.sidenav__title {
+  margin: 1em;
+}
+
+.sidenav ul {
+  margin: 0;
+  padding: 0;
+}
+
+.sidenav li {
+  margin: 1em;
+  list-style: none;
+}

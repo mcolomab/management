@@ -42,10 +42,11 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'rest_framework',
-    'corsheaders',
+    # 'corsheaders',
 
     # Local
     'app.apps.AppConfig',
+    'frontend.apps.FrontendConfig',
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
     'littlebox.apps.LittleboxConfig'
@@ -57,7 +58,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -138,7 +139,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -165,4 +166,4 @@ AUTHENTICATION_BACKENDS = (
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-CORS_ORIGIN_WHITELIST = 'http://localhost:3000',
+# CORS_ORIGIN_WHITELIST = 'http://localhost:3000',

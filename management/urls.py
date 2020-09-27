@@ -21,6 +21,9 @@ urlpatterns = [
     # Django admin
     path('admin/', admin.site.urls),
 
+    # React frontend
+    path('', include('frontend.urls')),
+
     # User management
     path('accounts/', include('allauth.urls')),
 

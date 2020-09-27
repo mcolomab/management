@@ -4,4 +4,4 @@ reportlab
 django-crispy-forms==1.8.0
 django-allauth==0.40.0
 djangorestframework
-django-cors-headers
+# django-cors-headers

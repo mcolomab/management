@@ -15,14 +15,15 @@ def update_lists(plist, qlist, product, quantity):
         qlist.pop(i)
         qlist.insert(i, new_quantity)
 
+
 def total_sales_product_report(request):
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="productos_vendidos.csv"'
 
     sales = Sale.objects.filter(
-        sale_date__gte='2020-08-01',
-        sale_date__lte='2020-08-31'
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30'
     ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco')
 
     products = []
@@ -38,6 +39,7 @@ def total_sales_product_report(request):
 
     return response
 
+
 def total_sales_report(request):
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
@@ -46,16 +48,41 @@ def total_sales_report(request):
     sb = Partner.objects.get(document_number='10070823956')
 
     sales = Sale.objects.filter(
-        sale_date__gte='2020-08-01',
-        sale_date__lte='2020-08-31'
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30'
+    ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco')
+
+    writer = csv.writer(response)
+    writer.writerow(['Fecha', 'Nro. Documento',
+                     'Cliente', 'Sub Total', 'IGV', 'Total', 'Pagado'])
+    for sale in sales:
+        writer.writerow([sale.sale_date, sale.document_number,
+                         sale.customer.name.upper(), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
+
+    return response
+
+
+def total_sales_without_sb_report(request):
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="ventas_sin_sb.csv"'
+
+    sb = Partner.objects.get(document_number='10070823956')
+
+    sales = Sale.objects.filter(
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30'
     ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco').exclude(customer=sb)
 
     writer = csv.writer(response)
-    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente', 'Sub Total', 'Pagado'])
+    writer.writerow(['Fecha', 'Nro. Documento',
+                     'Cliente', 'Sub Total', 'IGV', 'Total', 'Pagado'])
     for sale in sales:
-        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(), sale.sub_total, sale.amount_paid])
+        writer.writerow([sale.sale_date, sale.document_number,
+                         sale.customer.name.upper(), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
 
     return response
+
 
 def sales_factura_report(request):
     # Create the HttpResponse object with the appropriate CSV header.
@@ -66,17 +93,20 @@ def sales_factura_report(request):
     sb = Partner.objects.get(document_number='10070823956')
 
     sales = Sale.objects.filter(
-        sale_date__gte='2020-08-01',
-        sale_date__lte='2020-08-31',
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30',
         document_type_id=doc.id
     ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco').exclude(customer=sb)
 
     writer = csv.writer(response)
-    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente', 'Sub Total', 'IGV', 'Total', 'Pagado'])
+    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente',
+                     'Sub Total', 'IGV', 'Total', 'Pagado'])
     for sale in sales:
-        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
+        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(
+        ), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
 
     return response
+
 
 def sales_sin_factura_report(request):
     # Create the HttpResponse object with the appropriate CSV header.
@@ -86,16 +116,19 @@ def sales_sin_factura_report(request):
     doc = Document.objects.get(name='FACTURA')
 
     sales = Sale.objects.filter(
-        sale_date__gte='2020-08-01',
-        sale_date__lte='2020-08-31'
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30'
     ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco').exclude(document_type_id=doc.id)
 
     writer = csv.writer(response)
-    writer.writerow(['Fecha', 'Nro. Documento', 'Sub Total', 'IGV', 'Total', 'Pagado'])
+    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente',
+                     'Sub Total', 'IGV', 'Total', 'Pagado'])
     for sale in sales:
-        writer.writerow([sale.sale_date, sale.document_number, sale.sub_total, sale.igv, sale.total, sale.amount_paid])
+        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(
+        ), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
 
     return response
+
 
 def sales_vendor_report(request, vendor):
     # Create the HttpResponse object with the appropriate CSV header.
@@ -103,14 +136,16 @@ def sales_vendor_report(request, vendor):
     response['Content-Disposition'] = 'attachment; filename="ventas_'+vendor+'.csv"'
 
     sales = Sale.objects.filter(
-        sale_date__gte='2020-08-01',
-        sale_date__lte='2020-08-31',
+        sale_date__gte='2020-09-01',
+        sale_date__lte='2020-09-30',
         vendor=vendor
     ).exclude(status='borrador').exclude(status='anulada').exclude(status='blanco')
-    
+
     writer = csv.writer(response)
-    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente', 'Sub Total', 'IGV', 'Total', 'Pagado'])
+    writer.writerow(['Fecha', 'Nro. Documento', 'Cliente',
+                     'Sub Total', 'IGV', 'Total', 'Pagado'])
     for sale in sales:
-        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
+        writer.writerow([sale.sale_date, sale.document_number, sale.customer.name.upper(
+        ), sale.sub_total, sale.igv, sale.total, sale.amount_paid])
 
     return response

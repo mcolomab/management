@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  font-family: "Open Sans", Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
+#root {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: 70px 1fr 50px;
+  grid-template-areas:
+    "sidenav header"
+    "sidenav main"
+    "sidenav footer";
+  height: 100vh;
+}
+
+.main {
+  grid-area: main;
+  padding: 0px 20px 0px 20px;
+  color: #6c757d;
+  background-color: #f9fafd;
+}
